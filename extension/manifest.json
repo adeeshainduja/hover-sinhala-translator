@@ -6,7 +6,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["dist/content/wordDetector.js", "dist/content/content.js"],
+      "js": ["dist/content/wordDetector.js", "dist/content/hoverManager.js", "dist/content/content.js"],
       "run_at": "document_idle"
     }
   ]

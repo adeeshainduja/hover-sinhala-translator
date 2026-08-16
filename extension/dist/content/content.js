@@ -1,10 +1,11 @@
 "use strict";
-let lastLoggedWord = null;
+const hoverManager = new HoverManager({
+    delay: 700,
+    onWordHovered: (word) => {
+        console.log("Word ready for lookup:", word);
+    },
+});
 document.addEventListener("mousemove", (event) => {
     const word = getWordAtPoint(document, event.clientX, event.clientY);
-    if (!word || word === lastLoggedWord) {
-        return;
-    }
-    lastLoggedWord = word;
-    console.log("Detected word:", word);
+    hoverManager.handleWord(word);
 });

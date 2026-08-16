@@ -2,8 +2,8 @@ declare function getWordAtPoint(doc: Document, x: number, y: number): string | n
 declare function translateWord(word: string): Promise<{
   word: string;
   translation: string;
-  partOfSpeech: string;
-  definition: string;
+  source_language: string;
+  target_language: string;
 } | null>;
 
 const hoverManager = new HoverManager({

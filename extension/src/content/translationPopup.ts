@@ -1,8 +1,8 @@
 type TranslationData = {
   word: string;
   translation: string;
-  partOfSpeech: string;
-  definition: string;
+  partOfSpeech?: string;
+  definition?: string;
 };
 
 type PopupState = "hidden" | "loading" | "success" | "error";
@@ -115,17 +115,26 @@ class TranslationPopup {
     this.statusEl.textContent = "Translating...";
     this.showAt(anchor);
 
-    const result = await this.getTranslation(word);
-    if (token !== this.requestToken || this.activeWord !== word) {
-      return;
-    }
+    try {
+      const result = await this.getTranslation(word);
+      if (token !== this.requestToken || this.activeWord !== word) {
+        return;
+      }
 
-    if (!result) {
-      this.showError(word, "Meaning not available.");
-      return;
-    }
+      if (!result) {
+        this.showError(word, "Meaning not available.");
+        return;
+      }
 
-    this.renderSuccess(result);
+      this.renderSuccess(result);
+    } catch (error) {
+      if (token !== this.requestToken || this.activeWord !== word) {
+        return;
+      }
+
+      const message = this.resolveErrorMessage(error);
+      this.showError(word, message);
+    }
   }
 
   hide(): void {
@@ -151,8 +160,8 @@ class TranslationPopup {
   private renderSuccess(result: TranslationData): void {
     this.setState("success");
     this.translationEl.textContent = result.translation;
-    this.partOfSpeechEl.textContent = result.partOfSpeech;
-    this.definitionEl.textContent = result.definition;
+    this.partOfSpeechEl.textContent = result.partOfSpeech ?? "";
+    this.definitionEl.textContent = result.definition ?? "";
     this.statusEl.textContent = "";
     this.panel.style.display = "block";
     this.panel.style.opacity = "1";
@@ -202,6 +211,23 @@ class TranslationPopup {
       }
     `;
     return style;
+  }
+
+  private resolveErrorMessage(error: unknown): string {
+    if (typeof error === "object" && error !== null && "kind" in error) {
+      const kind = (error as { kind?: string }).kind;
+      if (kind === "timeout") {
+        return "Translation unavailable.";
+      }
+      if (kind === "network") {
+        return "Unable to get meaning. Please try again.";
+      }
+      if (kind === "http" || kind === "invalid-json") {
+        return "Unable to get meaning.";
+      }
+    }
+
+    return "Unable to get meaning.";
   }
 }
 

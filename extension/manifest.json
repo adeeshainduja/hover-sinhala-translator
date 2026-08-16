@@ -7,6 +7,7 @@
     {
       "matches": ["<all_urls>"],
       "js": [
+        "dist/config.js",
         "dist/content/wordDetector.js",
         "dist/content/hoverManager.js",
         "dist/services/translationService.js",

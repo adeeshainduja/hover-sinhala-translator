@@ -1,25 +1,19 @@
+from app.providers.base import TranslationProvider
 from app.schemas.translation import TranslateResponse
 
 
 class TranslationService:
-    _translations = {
-        "algorithm": "ඇල්ගොරිතම",
-        "computer": "පරිගණකය",
-        "database": "දත්ත සමුදාය",
-        "technology": "තාක්ෂණය",
-        "performance": "කාර්යක්ෂමතාව",
-        "system": "පද්ධතිය",
-        "learning": "ඉගෙනීම",
-    }
+    def __init__(self, provider: TranslationProvider) -> None:
+        self._provider = provider
 
-    def translate(self, word: str, target_language: str) -> TranslateResponse | None:
-        translation = self._translations.get(word.lower())
+    async def translate(self, word: str, source_language: str, target_language: str) -> TranslateResponse | None:
+        translation = await self._provider.translate(word, source_language, target_language)
         if translation is None:
             return None
 
         return TranslateResponse(
             word=word.lower(),
             translation=translation,
-            source_language="en",
+            source_language=source_language,
             target_language=target_language,
         )

@@ -1,18 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from functools import lru_cache
+
 from app.core.exceptions import TranslationProviderError
+from app.core.config import get_settings
 from app.providers.google_cloud import GoogleCloudTranslationProvider
 from app.schemas.translation import TranslateRequest, TranslateResponse
 from app.services.translation_service import TranslationService
-from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/v1", tags=["translation"])
 
 
+@lru_cache
 def get_translation_service() -> TranslationService:
     settings = get_settings()
     provider = GoogleCloudTranslationProvider(settings)
-    return TranslationService(provider)
+    return TranslationService(provider, settings)
 
 
 @router.post("/translate", response_model=TranslateResponse)
@@ -43,3 +46,8 @@ async def translate(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meaning not available.")
 
     return result
+
+
+@router.get("/cache/stats")
+def cache_stats(service: TranslationService = Depends(get_translation_service)) -> dict[str, int]:
+    return service.cache_stats()

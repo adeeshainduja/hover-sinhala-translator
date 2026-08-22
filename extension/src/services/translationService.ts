@@ -12,6 +12,8 @@ type TranslationServiceErrorShape = Error & {
   status?: number;
 };
 
+type PendingRequestMap = Map<string, Promise<BackendTranslationResponse | null>>;
+
 function createTranslationError(kind: TranslationServiceErrorKind, message: string, status?: number): TranslationServiceErrorShape {
   const error = new Error(message) as TranslationServiceErrorShape;
   error.kind = kind;
@@ -19,7 +21,17 @@ function createTranslationError(kind: TranslationServiceErrorKind, message: stri
   return error;
 }
 
-async function translateWord(word: string): Promise<BackendTranslationResponse | null> {
+function normalizeWord(word: string): string {
+  return word.trim().toLowerCase();
+}
+
+function makeRequestKey(word: string, sourceLanguage: string, targetLanguage: string): string {
+  return `${sourceLanguage}:${targetLanguage}:${normalizeWord(word)}`;
+}
+
+const pendingRequests: PendingRequestMap = new Map();
+
+async function translateRemote(word: string): Promise<BackendTranslationResponse | null> {
   const backendBaseUrl = (globalThis as typeof globalThis & {
     BACKEND_BASE_URL?: string;
   }).BACKEND_BASE_URL ?? "http://127.0.0.1:8000";
@@ -36,7 +48,7 @@ async function translateWord(word: string): Promise<BackendTranslationResponse |
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        word,
+        word: normalizeWord(word),
         target_language: "si",
       }),
       signal: controller.signal,
@@ -75,6 +87,21 @@ async function translateWord(word: string): Promise<BackendTranslationResponse |
   } finally {
     window.clearTimeout(timeoutId);
   }
+}
+
+async function translateWord(word: string): Promise<BackendTranslationResponse | null> {
+  const requestKey = makeRequestKey(word, "en", "si");
+  const pending = pendingRequests.get(requestKey);
+  if (pending) {
+    return pending;
+  }
+
+  const request = translateRemote(word).finally(() => {
+    pendingRequests.delete(requestKey);
+  });
+
+  pendingRequests.set(requestKey, request);
+  return request;
 }
 
 (globalThis as typeof globalThis & {

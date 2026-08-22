@@ -104,3 +104,40 @@ test("throws controlled error on timeout", async () => {
 
   await assert.rejects(() => translateWord("algorithm"), (error) => error.kind === "timeout");
 });
+
+test("reuses pending request for same word", async () => {
+  let requests = 0;
+  let resolveRequest;
+  const translateWord = loadService(
+    async () => {
+      requests += 1;
+      return new Promise((resolve) => {
+        resolveRequest = resolve;
+      });
+    },
+    {
+      setTimeout() {
+        return 1;
+      },
+      clearTimeout() {},
+    },
+  );
+
+  const first = translateWord("algorithm");
+  const second = translateWord("algorithm");
+  resolveRequest({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      word: "algorithm",
+      translation: "ඇල්ගොරිතම",
+      source_language: "en",
+      target_language: "si",
+    }),
+  });
+
+  const [resultA, resultB] = await Promise.all([first, second]);
+  assert.equal(requests, 1);
+  assert.equal(resultA && resultA.translation, "ඇල්ගොරිතම");
+  assert.equal(resultB && resultB.translation, "ඇල්ගොරිතම");
+});

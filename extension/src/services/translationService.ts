@@ -89,8 +89,8 @@ async function translateRemote(word: string): Promise<BackendTranslationResponse
   }
 }
 
-async function translateWord(word: string): Promise<BackendTranslationResponse | null> {
-  const requestKey = makeRequestKey(word, "en", "si");
+async function translateWord(word: string, targetLanguage = "si"): Promise<BackendTranslationResponse | null> {
+  const requestKey = makeRequestKey(word, "en", targetLanguage);
   const pending = pendingRequests.get(requestKey);
   if (pending) {
     return pending;

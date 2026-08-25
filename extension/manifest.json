@@ -3,10 +3,13 @@
   "name": "Hover Sinhala Translator",
   "version": "0.1.0",
   "description": "Translate English words into Sinhala by hovering over them.",
+  "permissions": ["storage"],
+  "options_page": "src/options/options.html",
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": [
+        "dist/settings/settingsManager.js",
         "dist/config.js",
         "dist/content/wordDetector.js",
         "dist/content/hoverManager.js",

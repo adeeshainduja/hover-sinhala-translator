@@ -1,0 +1,8 @@
+const manager = new SettingsManager();
+const form = document.querySelector<HTMLFormElement>("#settings-form")!;
+const enabled = document.querySelector<HTMLInputElement>("#enabled")!; const delay = document.querySelector<HTMLSelectElement>("#hover-delay")!; const language = document.querySelector<HTMLSelectElement>("#target-language")!; const position = document.querySelector<HTMLSelectElement>("#popup-position")!; const definition = document.querySelector<HTMLInputElement>("#show-definition")!; const partOfSpeech = document.querySelector<HTMLInputElement>("#show-part-of-speech")!; const feedback = document.querySelector<HTMLParagraphElement>("#feedback")!;
+function render(settings: ExtensionSettings): void { enabled.checked = settings.enabled; delay.value = String(settings.hoverDelay); language.value = settings.targetLanguage; position.value = settings.popupPosition; definition.checked = settings.showDefinition; partOfSpeech.checked = settings.showPartOfSpeech; }
+function showFeedback(message: string): void { feedback.textContent = message; window.setTimeout(() => { feedback.textContent = ""; }, 2200); }
+void manager.load().then(render);
+form.addEventListener("submit", async (event) => { event.preventDefault(); await manager.save({ enabled: enabled.checked, hoverDelay: Number(delay.value), targetLanguage: "si", popupPosition: position.value as SettingsPopupPosition, showDefinition: definition.checked, showPartOfSpeech: partOfSpeech.checked }); showFeedback("Settings saved"); });
+document.querySelector<HTMLButtonElement>("#reset")!.addEventListener("click", async () => { render(await manager.reset()); showFeedback("Settings reset"); });

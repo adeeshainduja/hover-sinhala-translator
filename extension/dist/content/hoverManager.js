@@ -12,6 +12,7 @@ class HoverManager {
         this.setTimer = options.timerApi?.setTimeout ?? window.setTimeout.bind(window);
         this.clearTimer = options.timerApi?.clearTimeout ?? window.clearTimeout.bind(window);
     }
+    setDelay(delay) { this.delay = delay; }
     handleWord(word) {
         if (!word) {
             this.reset();

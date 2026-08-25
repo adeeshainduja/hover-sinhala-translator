@@ -8,7 +8,7 @@ type HoverManagerOptions = {
 };
 
 class HoverManager {
-  private readonly delay: number;
+  private delay: number;
   private readonly onWordHovered: (word: string) => void;
   private readonly setTimer: typeof window.setTimeout;
   private readonly clearTimer: typeof window.clearTimeout;
@@ -21,6 +21,8 @@ class HoverManager {
     this.setTimer = options.timerApi?.setTimeout ?? window.setTimeout.bind(window);
     this.clearTimer = options.timerApi?.clearTimeout ?? window.clearTimeout.bind(window);
   }
+
+  setDelay(delay: number): void { this.delay = delay; }
 
   handleWord(word: string | null): void {
     if (!word) {

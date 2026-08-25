@@ -7,7 +7,7 @@ type TranslationData = {
 
 type PopupState = "hidden" | "loading" | "success" | "error";
 
-type PopupPosition = {
+type PopupCoordinates = {
   left: number;
   top: number;
 };
@@ -16,18 +16,23 @@ type PopupOptions = {
   getTranslation: (word: string) => Promise<TranslationData | null>;
   viewport?: Pick<Window, "innerWidth" | "innerHeight">;
   documentRef?: Document;
+  getSettings?: () => { popupPosition: "auto" | "above" | "below"; showDefinition: boolean; showPartOfSpeech: boolean };
 };
 
 function calculatePopupPosition(
   anchor: { x: number; y: number },
   popupSize: { width: number; height: number },
   viewport: { width: number; height: number },
-): PopupPosition {
+  preferred: "auto" | "above" | "below" = "auto",
+): PopupCoordinates {
   const margin = 12;
   const offset = 18;
 
   let left = anchor.x + offset;
   let top = anchor.y + offset;
+
+  if (preferred === "above") top = anchor.y - popupSize.height - offset;
+  if (preferred === "below") top = anchor.y + offset;
 
   if (left + popupSize.width + margin > viewport.width) {
     left = Math.max(margin, anchor.x - popupSize.width - offset);
@@ -57,9 +62,11 @@ class TranslationPopup {
   private state: PopupState = "hidden";
   private activeWord: string | null = null;
   private requestToken = 0;
+  private readonly getSettings: NonNullable<PopupOptions["getSettings"]>;
 
   constructor(options: PopupOptions) {
     this.getTranslation = options.getTranslation;
+    this.getSettings = options.getSettings ?? (() => ({ popupPosition: "auto", showDefinition: true, showPartOfSpeech: true }));
     this.viewport = options.viewport ?? window;
     const doc = options.documentRef ?? document;
     this.host = doc.createElement("div");
@@ -160,8 +167,9 @@ class TranslationPopup {
   private renderSuccess(result: TranslationData): void {
     this.setState("success");
     this.translationEl.textContent = result.translation;
-    this.partOfSpeechEl.textContent = result.partOfSpeech ?? "";
-    this.definitionEl.textContent = result.definition ?? "";
+    const settings = this.getSettings();
+    this.partOfSpeechEl.textContent = settings.showPartOfSpeech ? result.partOfSpeech ?? "" : "";
+    this.definitionEl.textContent = settings.showDefinition ? result.definition ?? "" : "";
     this.statusEl.textContent = "";
     this.panel.style.display = "block";
     this.panel.style.opacity = "1";
@@ -177,6 +185,7 @@ class TranslationPopup {
       anchor,
       { width: 280, height: this.panel.offsetHeight || 160 },
       { width: this.viewport.innerWidth, height: this.viewport.innerHeight },
+      this.getSettings().popupPosition,
     );
 
     this.panel.style.left = `${position.left}px`;

@@ -1,10 +1,10 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 
 
 class TranslateRequest(BaseModel):
-    word: str
+    word: str = Field(min_length=1, max_length=100)
     target_language: Literal["si"]
 
     @field_validator("word")
@@ -13,6 +13,8 @@ class TranslateRequest(BaseModel):
         normalized = value.strip()
         if not normalized:
             raise ValueError("word must not be empty")
+        if len(normalized) > 100:
+            raise ValueError("word is too long")
         return normalized.lower()
 
 

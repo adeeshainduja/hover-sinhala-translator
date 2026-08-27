@@ -4,9 +4,10 @@
   "description": "��#\u0000 \u0000h\u0000o\u0000v\u0000e\u0000r\u0000-\u0000s\u0000i\u0000n\u0000h\u0000a\u0000l\u0000a\u0000-\u0000t\u0000r\u0000a\u0000n\u0000s\u0000l\u0000a\u0000t\u0000o\u0000r\u0000\r\u0000 \u0000",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run build && node --test tests/*.test.js",
     "build": "tsc",
-    "test:word-detection": "node --test tests/wordDetector.test.js"
+    "test:word-detection": "node --test tests/wordDetector.test.js",
+    "package": "npm run build && powershell -ExecutionPolicy Bypass -File .\\package-release.ps1"
   },
   "repository": {
     "type": "git",

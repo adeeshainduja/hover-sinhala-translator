@@ -62,6 +62,7 @@ class TranslationPopup {
   private state: PopupState = "hidden";
   private activeWord: string | null = null;
   private requestToken = 0;
+  private errorTimer: number | null = null;
   private readonly getSettings: NonNullable<PopupOptions["getSettings"]>;
 
   constructor(options: PopupOptions) {
@@ -94,6 +95,7 @@ class TranslationPopup {
     this.panel.style.lineHeight = "1.4";
     this.panel.style.pointerEvents = "none";
     this.panel.style.opacity = "0";
+    if (this.errorTimer !== null) { window.clearTimeout(this.errorTimer); this.errorTimer = null; }
     this.panel.style.transform = "translateY(4px)";
     this.panel.style.transition = "opacity 120ms ease, transform 120ms ease";
     this.panel.style.display = "none";
@@ -162,6 +164,7 @@ class TranslationPopup {
     this.panel.style.display = "block";
     this.panel.style.opacity = "1";
     this.panel.style.transform = "translateY(0)";
+    this.errorTimer = window.setTimeout(() => this.hide(), 3500);
   }
 
   private renderSuccess(result: TranslationData): void {
@@ -218,6 +221,7 @@ class TranslationPopup {
       :host {
         all: initial;
       }
+      *, *::before, *::after { box-sizing: border-box; }
     `;
     return style;
   }

@@ -5,4 +5,6 @@ extension/dist/
 venv/
 __pycache__/
 *.pyc
-backend/.env.example
+coverage/
+release/
+*.log

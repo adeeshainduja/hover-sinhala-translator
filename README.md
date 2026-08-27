@@ -37,6 +37,11 @@ Preferences are stored in Chrome sync storage and use these defaults:
 
 Changes apply to active pages without a reload when Chrome delivers the storage update.
 
+The detector preserves the word's displayed casing, strips surrounding punctuation,
+and supports practical forms such as `object-oriented`, `don't`, `user_name`, and
+`Python3`. It ignores inputs, textareas, contenteditable areas, code/preformatted
+blocks, and script/style content so normal editing and code browsing are not interrupted.
+
 ## Notes
 
 - The backend uses Google Cloud Translation Basic through a server-side provider.

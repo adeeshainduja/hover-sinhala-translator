@@ -9,6 +9,8 @@ function getWordAtPoint(doc, x, y) {
     if (node.nodeType !== Node.TEXT_NODE) {
         return null;
     }
+    if (isIgnoredContext(node.parentElement))
+        return null;
     return extractWordFromText(node.textContent ?? "", offset);
 }
 function extractWordFromText(text, offset) {
@@ -40,7 +42,7 @@ function extractWordFromText(text, offset) {
     if (!isValidEnglishWord(word)) {
         return null;
     }
-    return word.toLowerCase();
+    return word;
 }
 function getCollapsedRangeAtPoint(doc, x, y) {
     const caretRangeFromPoint = doc.caretRangeFromPoint;
@@ -61,8 +63,20 @@ function getCollapsedRangeAtPoint(doc, x, y) {
     return range;
 }
 function isWordChar(char) {
-    return /[A-Za-z]/.test(char);
+    return /[A-Za-z0-9_'-]/.test(char);
 }
 function isValidEnglishWord(word) {
-    return /^[A-Za-z]+$/.test(word);
+    return word.length >= 2 && /[A-Za-z]/.test(word) && /^[A-Za-z0-9_'-]+$/.test(word);
+}
+function isIgnoredContext(element) {
+    let current = element;
+    while (current) {
+        const tag = current.tagName.toLowerCase();
+        if (tag === "input" || tag === "textarea" || tag === "code" || tag === "pre" || tag === "script" || tag === "style" || tag === "noscript")
+            return true;
+        if (current instanceof HTMLElement && current.isContentEditable)
+            return true;
+        current = current.parentElement;
+    }
+    return false;
 }

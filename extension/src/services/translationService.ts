@@ -30,8 +30,9 @@ function makeRequestKey(word: string, sourceLanguage: string, targetLanguage: st
 }
 
 const pendingRequests: PendingRequestMap = new Map();
+const requestControllers = new Map<string, AbortController>();
 
-async function translateRemote(word: string): Promise<BackendTranslationResponse | null> {
+async function translateRemote(word: string, targetLanguage: string, requestKey: string): Promise<BackendTranslationResponse | null> {
   const backendBaseUrl = (globalThis as typeof globalThis & {
     BACKEND_BASE_URL?: string;
   }).BACKEND_BASE_URL ?? "http://127.0.0.1:8000";
@@ -39,6 +40,7 @@ async function translateRemote(word: string): Promise<BackendTranslationResponse
     TRANSLATION_TIMEOUT_MS?: number;
   }).TRANSLATION_TIMEOUT_MS ?? 5000;
   const controller = new AbortController();
+  requestControllers.set(requestKey, controller);
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
 
   try {
@@ -49,7 +51,7 @@ async function translateRemote(word: string): Promise<BackendTranslationResponse
       },
       body: JSON.stringify({
         word: normalizeWord(word),
-        target_language: "si",
+        target_language: targetLanguage,
       }),
       signal: controller.signal,
     });
@@ -96,14 +98,21 @@ async function translateWord(word: string, targetLanguage = "si"): Promise<Backe
     return pending;
   }
 
-  const request = translateRemote(word).finally(() => {
+  const request = translateRemote(word, targetLanguage, requestKey).finally(() => {
     pendingRequests.delete(requestKey);
+    requestControllers.delete(requestKey);
   });
 
   pendingRequests.set(requestKey, request);
   return request;
 }
 
+function cancelTranslation(word: string, targetLanguage = "si"): void {
+  requestControllers.get(makeRequestKey(word, "en", targetLanguage))?.abort();
+}
+
 (globalThis as typeof globalThis & {
   translateWord: typeof translateWord;
+  cancelTranslation: typeof cancelTranslation;
 }).translateWord = translateWord;
+(globalThis as typeof globalThis & { cancelTranslation: typeof cancelTranslation }).cancelTranslation = cancelTranslation;
